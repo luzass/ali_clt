@@ -408,7 +408,7 @@
     }
 
     async function supabaseInsertInicial() {
-      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt`;
+      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt?on_conflict=id`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -416,8 +416,7 @@
           "apikey": SUPABASE_ANON_KEY,
           "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
           "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates",
-          "x-lead-token": leadToken
+          "Prefer": "resolution=merge-duplicates"
         },
         body: JSON.stringify(lead)
       });
@@ -441,7 +440,7 @@
             "apikey": SUPABASE_ANON_KEY,
             "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
             "Content-Type": "application/json",
-            "x-lead-token": leadToken
+            "Prefer": "return=minimal"
           },
           body: JSON.stringify({
             ...dados,
