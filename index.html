@@ -327,11 +327,8 @@
 
     const WHATSAPP_NUMERO = "5561991164066";
 
-    let leadId = localStorage.getItem("lead_clt_id") || crypto.randomUUID();
-    let leadToken = localStorage.getItem("lead_clt_token") || crypto.randomUUID();
-
-    localStorage.setItem("lead_clt_id", leadId);
-    localStorage.setItem("lead_clt_token", leadToken);
+    let leadId = localStorage.getItem("lead_clt_id") || "";
+    let leadToken = localStorage.getItem("lead_clt_token") || "";
 
     let step = 0;
 
@@ -407,29 +404,60 @@
       return (anoAtual - ano) * 12 + (mesAtual - mes);
     }
 
-    async function supabaseInsertInicial() {
-      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt?on_conflict=id`;
+    async function criarLeadInicial(dados = {}) {
+      const novoLeadId = crypto.randomUUID();
+      const novoLeadToken = crypto.randomUUID();
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates"
-        },
-        body: JSON.stringify(lead)
-      });
+      lead.id = novoLeadId;
+      lead.lead_token = novoLeadToken;
 
-      if (!response.ok) {
-        console.error("Erro ao inserir lead:", await response.text());
+      Object.assign(lead, dados);
+
+      localStorage.setItem("lead_clt_id", novoLeadId);
+      localStorage.setItem("lead_clt_token", novoLeadToken);
+
+      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt`;
+
+      card.classList.add("loading");
+
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify(lead)
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao criar lead:", await response.text());
+          showError("Não conseguimos salvar seus dados. Tente novamente.");
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Erro de conexão com Supabase:", error);
+        showError("Erro de conexão. Verifique sua internet e tente novamente.");
+        return false;
+      } finally {
+        card.classList.remove("loading");
       }
     }
 
     async function salvarLead(dados = {}) {
       Object.assign(lead, dados);
 
-      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt?id=eq.${leadId}`;
+      if (!lead.id) {
+        console.error("Não existe lead.id para atualizar.");
+        showError("Não encontramos seu cadastro. Atualize a página e tente novamente.");
+        return false;
+      }
+
+      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt?id=eq.${lead.id}`;
 
       card.classList.add("loading");
 
@@ -452,16 +480,19 @@
 
         if (!response.ok) {
           console.error("Erro ao salvar lead:", await response.text());
+          return false;
         }
+
+        return true;
       } catch (error) {
         console.error("Erro de conexão com Supabase:", error);
+        return false;
       } finally {
         card.classList.remove("loading");
       }
     }
 
     async function iniciarLead() {
-      await supabaseInsertInicial();
       step = 1;
       telaInicial();
     }
@@ -527,12 +558,16 @@
         return;
       }
 
-      await salvarLead({
+      const criouLead = await criarLeadInicial({
         nome,
         telefone,
         etapa_atual: "dados_pessoais",
         status: "em_andamento"
       });
+
+      if (!criouLead) {
+        return;
+      }
 
       telaCarteiraAssinada();
     }
