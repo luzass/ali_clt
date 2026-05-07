@@ -461,7 +461,7 @@
         return false;
       }
 
-      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt?id=eq.${lead.id}`;
+      const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt?id=eq.${lead.id}&select=*`;
 
       console.log("Atualizando lead:", lead.id, dados);
 
@@ -474,7 +474,7 @@
             "apikey": SUPABASE_ANON_KEY,
             "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
             "Content-Type": "application/json",
-            "Prefer": "return=minimal"
+            "Prefer": "return=representation"
           },
           body: JSON.stringify({
             ...dados,
@@ -484,15 +484,30 @@
           })
         });
 
+        const texto = await response.text();
+
         if (!response.ok) {
-          const erro = await response.text();
-          console.error("Erro ao salvar lead:", erro);
+          console.error("Erro ao salvar lead:", texto);
           alert("Erro ao salvar próxima resposta. Veja o console.");
           return false;
         }
 
-        console.log("Lead atualizado com sucesso:", dados);
+        const data = texto ? JSON.parse(texto) : [];
+
+        if (!data || data.length === 0) {
+          console.warn("PATCH executou, mas não atualizou nenhuma linha. Verifique RLS/select/id.", {
+            leadId: lead.id,
+            dados,
+            resposta: data
+          });
+
+          alert("A resposta foi enviada, mas nenhuma linha foi atualizada no Supabase. Veja o console.");
+          return false;
+        }
+
+        console.log("Lead atualizado no Supabase:", data[0]);
         return true;
+
       } catch (error) {
         console.error("Erro de conexão com Supabase:", error);
         alert("Erro de conexão com Supabase.");
@@ -603,6 +618,7 @@
           status: "reprovado",
           motivo_reprovacao: "Não trabalha de carteira assinada"
         });
+        if (!salvou) return;
 
         telaReprovado();
         return;
@@ -614,6 +630,7 @@
         status: "em_andamento",
         motivo_reprovacao: ""
       });
+      if (!salvou) return;
 
       telaTempoEmpresa();
     }
@@ -690,6 +707,7 @@
           status: "reprovado",
           motivo_reprovacao: "Menos de 9 meses na empresa atual"
         });
+        if (!salvou) return;
 
         telaReprovado();
         return;
@@ -704,6 +722,7 @@
         status: "em_andamento",
         motivo_reprovacao: ""
       });
+      if (!salvou) return;
 
       telaEmpresaMaisDoisAnos();
     }
@@ -729,7 +748,7 @@
           status: "reprovado",
           motivo_reprovacao: "Empresa com menos de 2 anos"
         });
-
+        if (!salvou) return;
         telaReprovado();
         return;
       }
@@ -740,6 +759,7 @@
         status: "em_andamento",
         motivo_reprovacao: ""
       });
+      if (!salvou) return;
 
       telaConsignadoAntes();
     }
@@ -763,6 +783,7 @@
         etapa_atual: "consignado_clt_antes",
         status: "em_andamento"
       });
+      if (!salvou) return;
 
       telaMargem();
     }
@@ -791,6 +812,7 @@
           status: "reprovado",
           motivo_reprovacao: "Não possui margem consignável"
         });
+        if (!salvou) return;
 
         telaReprovado();
         return;
@@ -802,7 +824,7 @@
         status: "pre_aprovado",
         motivo_reprovacao: ""
       });
-
+      if (!salvou) return;
       telaPreAprovado();
     }
 
@@ -854,7 +876,9 @@
         etapa_atual: "finalizado_whatsapp",
         status: "aguardando_atendimento"
       });
+      if (!salvou) return;
 
+      
       const mensagem = encodeURIComponent(
         `Olá! Fiz meu pré-cadastro para Empréstimo CLT e fui pré-aprovado.\n\n` +
         `Nome: ${lead.nome}\n` +
