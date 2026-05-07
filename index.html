@@ -699,7 +699,7 @@
       const atendeTempo = mesesNaEmpresa >= 9;
 
       if (!atendeTempo) {
-        await salvarLead({
+        const salvou = await salvarLead({
           data_inicio_mes: mes,
           data_inicio_ano: ano,
           tempo_empresa_meses: mesesNaEmpresa,
@@ -708,13 +708,14 @@
           status: "reprovado",
           motivo_reprovacao: "Menos de 9 meses na empresa atual"
         });
+
         if (!salvou) return;
 
         telaReprovado();
         return;
       }
 
-      await salvarLead({
+      const salvou = await salvarLead({
         data_inicio_mes: mes,
         data_inicio_ano: ano,
         tempo_empresa_meses: mesesNaEmpresa,
@@ -723,6 +724,7 @@
         status: "em_andamento",
         motivo_reprovacao: ""
       });
+
       if (!salvou) return;
 
       telaEmpresaMaisDoisAnos();
