@@ -613,13 +613,10 @@
     async function responderCarteira(valor) {
       if (!valor) {
         const salvou = await salvarLead({
-          data_inicio_mes: mes,
-          data_inicio_ano: ano,
-          tempo_empresa_meses: mesesNaEmpresa,
-          atende_tempo_minimo: false,
-          etapa_atual: "tempo_empresa",
+          trabalha_carteira_assinada: false,
+          etapa_atual: "carteira_assinada",
           status: "reprovado",
-          motivo_reprovacao: "Menos de 9 meses na empresa atual"
+          motivo_reprovacao: "Não trabalha de carteira assinada"
         });
 
         if (!salvou) return;
@@ -629,20 +626,16 @@
       }
 
       const salvou = await salvarLead({
-        data_inicio_mes: mes,
-        data_inicio_ano: ano,
-        tempo_empresa_meses: mesesNaEmpresa,
-        atende_tempo_minimo: true,
-        etapa_atual: "tempo_empresa",
+        trabalha_carteira_assinada: true,
+        etapa_atual: "carteira_assinada",
         status: "em_andamento",
         motivo_reprovacao: ""
       });
 
       if (!salvou) return;
 
-      telaEmpresaMaisDoisAnos();
+      telaTempoEmpresa();
     }
-
     function telaTempoEmpresa() {
       step = 4;
 
@@ -750,23 +743,26 @@
 
     async function responderEmpresaTempo(valor) {
       if (!valor) {
-        await salvarLead({
+        const salvou = await salvarLead({
           empresa_mais_2_anos: false,
           etapa_atual: "empresa_mais_2_anos",
           status: "reprovado",
           motivo_reprovacao: "Empresa com menos de 2 anos"
         });
+
         if (!salvou) return;
+
         telaReprovado();
         return;
       }
 
-      await salvarLead({
+      const salvou = await salvarLead({
         empresa_mais_2_anos: true,
         etapa_atual: "empresa_mais_2_anos",
         status: "em_andamento",
         motivo_reprovacao: ""
       });
+
       if (!salvou) return;
 
       telaConsignadoAntes();
@@ -786,11 +782,12 @@
     }
 
     async function responderConsignado(valor) {
-      await salvarLead({
+      const salvou = await salvarLead({
         ja_fez_consignado_clt: valor,
         etapa_atual: "consignado_clt_antes",
         status: "em_andamento"
       });
+
       if (!salvou) return;
 
       telaMargem();
@@ -814,25 +811,28 @@
 
     async function responderMargem(valor) {
       if (valor === "Não tenho margem") {
-        await salvarLead({
+        const salvou = await salvarLead({
           margem_consignavel: valor,
           etapa_atual: "margem_consignavel",
           status: "reprovado",
           motivo_reprovacao: "Não possui margem consignável"
         });
+
         if (!salvou) return;
 
         telaReprovado();
         return;
       }
 
-      await salvarLead({
+      const salvou = await salvarLead({
         margem_consignavel: valor,
         etapa_atual: "margem_consignavel",
         status: "pre_aprovado",
         motivo_reprovacao: ""
       });
+
       if (!salvou) return;
+
       telaPreAprovado();
     }
 
@@ -879,11 +879,12 @@
         return;
       }
 
-      await salvarLead({
+      const salvou = await salvarLead({
         valor_emprestimo: valor,
         etapa_atual: "finalizado_whatsapp",
         status: "aguardando_atendimento"
       });
+
       if (!salvou) return;
 
       
