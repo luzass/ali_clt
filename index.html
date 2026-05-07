@@ -612,27 +612,35 @@
 
     async function responderCarteira(valor) {
       if (!valor) {
-        await salvarLead({
-          trabalha_carteira_assinada: false,
-          etapa_atual: "carteira_assinada",
+        const salvou = await salvarLead({
+          data_inicio_mes: mes,
+          data_inicio_ano: ano,
+          tempo_empresa_meses: mesesNaEmpresa,
+          atende_tempo_minimo: false,
+          etapa_atual: "tempo_empresa",
           status: "reprovado",
-          motivo_reprovacao: "Não trabalha de carteira assinada"
+          motivo_reprovacao: "Menos de 9 meses na empresa atual"
         });
+
         if (!salvou) return;
 
         telaReprovado();
         return;
       }
 
-      await salvarLead({
-        trabalha_carteira_assinada: true,
-        etapa_atual: "carteira_assinada",
+      const salvou = await salvarLead({
+        data_inicio_mes: mes,
+        data_inicio_ano: ano,
+        tempo_empresa_meses: mesesNaEmpresa,
+        atende_tempo_minimo: true,
+        etapa_atual: "tempo_empresa",
         status: "em_andamento",
         motivo_reprovacao: ""
       });
+
       if (!salvou) return;
 
-      telaTempoEmpresa();
+      telaEmpresaMaisDoisAnos();
     }
 
     function telaTempoEmpresa() {
