@@ -418,6 +418,8 @@
 
       const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt`;
 
+      console.log("Criando lead inicial:", lead);
+
       card.classList.add("loading");
 
       try {
@@ -433,11 +435,13 @@
         });
 
         if (!response.ok) {
-          console.error("Erro ao criar lead:", await response.text());
+          const erro = await response.text();
+          console.error("Erro ao criar lead:", erro);
           showError("Não conseguimos salvar seus dados. Tente novamente.");
           return false;
         }
 
+        console.log("Lead inicial criado com sucesso:", novoLeadId);
         return true;
       } catch (error) {
         console.error("Erro de conexão com Supabase:", error);
@@ -452,12 +456,14 @@
       Object.assign(lead, dados);
 
       if (!lead.id) {
-        console.error("Não existe lead.id para atualizar.");
-        showError("Não encontramos seu cadastro. Atualize a página e tente novamente.");
+        console.error("Não existe lead.id para atualizar.", lead);
+        alert("Erro: não encontramos o ID do cadastro para atualizar.");
         return false;
       }
 
       const url = `${SUPABASE_URL}/rest/v1/clientes_trafego_clt?id=eq.${lead.id}`;
+
+      console.log("Atualizando lead:", lead.id, dados);
 
       card.classList.add("loading");
 
@@ -479,13 +485,17 @@
         });
 
         if (!response.ok) {
-          console.error("Erro ao salvar lead:", await response.text());
+          const erro = await response.text();
+          console.error("Erro ao salvar lead:", erro);
+          alert("Erro ao salvar próxima resposta. Veja o console.");
           return false;
         }
 
+        console.log("Lead atualizado com sucesso:", dados);
         return true;
       } catch (error) {
         console.error("Erro de conexão com Supabase:", error);
+        alert("Erro de conexão com Supabase.");
         return false;
       } finally {
         card.classList.remove("loading");
